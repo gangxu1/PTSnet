@@ -300,6 +300,8 @@ function onCurrentChange(page) { emit('page-change', page) }
 }
 .pg-info { font-size: 12px; color: #666; }
 
-:deep(.row-selected) { background: #dceefa !important; }
+:deep(.el-table th.el-table__cell) { background-color: #eaf5ec; }
+:deep(.el-table__row:nth-child(even) td.el-table__cell) { background-color: #eaf5ec; }
+:deep(.row-selected td.el-table__cell) { background-color: #dceefa !important; }
 :deep(.el-table .el-table__row:hover > td) { background: #f0f9ff; }
 </style>

@@ -40,3 +40,4 @@ E:\PTSnet\backend\obj\Debug\net8.0\refint\PTSnet.dll
 E:\PTSnet\backend\obj\Debug\net8.0\PTSnet.pdb
 E:\PTSnet\backend\obj\Debug\net8.0\PTSnet.genruntimeconfig.cache
 E:\PTSnet\backend\obj\Debug\net8.0\ref\PTSnet.dll
+E:\PTSnet\backend\obj\Debug\net8.0\PTSnet.sourcelink.json
