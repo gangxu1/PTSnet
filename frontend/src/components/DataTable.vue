@@ -53,7 +53,8 @@ function rowClass({ row, rowIndex }) {
 }
 
 // ── Auto column width ─────────────────────────────────────────────────────
-const AUTO_WIDTH_COLS = new Set(['ADDA', 'BATCH', 'CONTACT', 'LOCALCONTACT', 'FAMILY', 'MOD', 'MODESIGN', 'PONUMBER'])
+const AUTO_WIDTH_COLS = new Set(['ADDA', 'BATCH', 'CONTACT', 'LOCALCONTACT', 'FAMILY', 'MOD', 'MODESIGN', 'PONUMBER', 'COMMENTS', 'WBS', 'COST'])
+const COL_MAX_CHARS = { BATCH: 30, COMMENTS: 30, WBS: 20, COST: 20 }
 const CHAR_PX = 9   // approximate px per character at 15px font
 const COL_PAD = 24  // horizontal cell padding
 
@@ -64,7 +65,10 @@ function colWidth(col) {
     const v = row[col]
     return v != null ? Math.max(max, String(v).length) : max
   }, 0)
-  return Math.max(headerLen, maxDataLen) * CHAR_PX + COL_PAD
+  const chars = COL_MAX_CHARS[col] !== undefined
+    ? Math.min(Math.max(headerLen, maxDataLen), COL_MAX_CHARS[col])
+    : Math.max(headerLen, maxDataLen)
+  return chars * CHAR_PX + COL_PAD
 }
 
 // ── Sort (double-click header to toggle asc/desc) ─────────────────────────

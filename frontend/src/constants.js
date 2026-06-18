@@ -1,9 +1,9 @@
 export const BLOB_COLS = new Set(['FILECONTENT'])
-export const HIDDEN_COLS = new Set(['TABLEID', 'CREATETIME', 'MODIFYDATE'])
-export const READONLY_COLS = new Set(['BATCH', 'CREATETIME', 'MODIFYDATE', 'TABLEID', 'ADDA'])
+export const HIDDEN_COLS = new Set([])
+export const READONLY_COLS = new Set(['BATCH', 'CREATETIME', 'MODIFYDATE', 'TABLEID'])
 export const REQUIRED_COLS = new Set(['BATCH'])
 export const NEW_HIDDEN_COLS = new Set(['ADDA'])
-export const MODAL_HIDDEN_COLS = new Set(['ADDC', 'ADDE', 'ADDF', 'FORWADER'])
+export const MODAL_HIDDEN_COLS = new Set(['ADDC', 'ADDE', 'ADDF', 'FORWADER', 'TABLEID', 'CREATETIME', 'MODIFYDATE'])
 export const COL_AUTOCOMPLETE = new Set(['CONTACT', 'LOCALCONTACT', 'WBS', 'COST'])
 
 export const COL_LABELS = {
