@@ -659,7 +659,8 @@ app.MapGet("/api/db/filedownload", async (HttpContext ctx, string table, string 
         };
         var mime = mimeMap.TryGetValue(ext, out var m) ? m : "application/octet-stream";
 
-        ctx.Response.Headers["Content-Disposition"] = $"attachment; filename=\"{filename}\"";
+        var encodedFilename = Uri.EscapeDataString(filename);
+        ctx.Response.Headers["Content-Disposition"] = $"attachment; filename*=UTF-8''{encodedFilename}";
         ctx.Response.ContentType = mime;
         using var entryStream = entry.Open();
         await entryStream.CopyToAsync(ctx.Response.Body);

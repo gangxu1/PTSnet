@@ -1,9 +1,10 @@
 <script setup>
 import { ref, computed, watch, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
-import { UploadFilled, Delete } from '@element-plus/icons-vue'
+import { UploadFilled, Delete, Download, View } from '@element-plus/icons-vue'
+import Lightbox from './Lightbox.vue'
 import {
-  HIDDEN_COLS, READONLY_COLS, REQUIRED_COLS, BLOB_COLS, NEW_HIDDEN_COLS,
+  HIDDEN_COLS, READONLY_COLS, REQUIRED_COLS, BLOB_COLS, NEW_HIDDEN_COLS, MODAL_HIDDEN_COLS,
   COL_OPTIONS, COL_AUTOCOMPLETE, COL_DEFAULTS, COL_ORDER,
   colLabel, today, formatBytes, fileIcon, isImage
 } from '../constants.js'
@@ -37,6 +38,7 @@ const formCols = computed(() => {
     if (BLOB_COLS.has(col)) return false
     if (HIDDEN_COLS.has(col)) return false
     if (props.mode === 'new' && NEW_HIDDEN_COLS.has(col)) return false
+    if (MODAL_HIDDEN_COLS.has(col)) return false
     return true
   })
 })
@@ -101,9 +103,39 @@ function getPKFileUrl(filename) {
   return fileDownloadUrl(props.table, pk, pkVal, filename)
 }
 
+async function downloadFile(filename) {
+  const url = getPKFileUrl(filename)
+  const res = await fetch(url)
+  const blob = await res.blob()
+  const a = document.createElement('a')
+  a.href = URL.createObjectURL(blob)
+  a.download = filename
+  a.click()
+  URL.revokeObjectURL(a.href)
+}
+
 // Image files for lightbox preview
 const imageExisting = computed(() => existingFiles.value.filter(f => isImage(f.name)))
 const imageNewFiles = computed(() => newFiles.value.filter(f => isImage(f.name)))
+
+// ── Lightbox preview ──────────────────────────────────────────────────────
+const lightboxVisible = ref(false)
+const lightboxImages = ref([])
+const lightboxIdx = ref(0)
+
+const imageExistingAll = computed(() =>
+  existingFiles.value.filter(f => isImage(f.name)).map(f => ({
+    name: f.name,
+    url: getPKFileUrl(f.name)
+  }))
+)
+
+function previewImage(filename) {
+  const idx = imageExistingAll.value.findIndex(f => f.name === filename)
+  lightboxImages.value = imageExistingAll.value
+  lightboxIdx.value = idx >= 0 ? idx : 0
+  lightboxVisible.value = true
+}
 
 // ── Autocomplete ──────────────────────────────────────────────────────────
 const acCache = ref({})
@@ -114,6 +146,12 @@ async function queryAutocomplete(col, queryStr, cb) {
   }
   const q = queryStr.toLowerCase()
   cb(acCache.value[col].filter(item => item.value.toLowerCase().includes(q)))
+}
+
+function isFieldDisabled(col) {
+  if (!READONLY_COLS.has(col)) return false
+  if (col === 'BATCH' && props.mode !== 'edit') return false
+  return true
 }
 
 // ── Validation & Save ─────────────────────────────────────────────────────
@@ -142,7 +180,7 @@ async function onSave() {
   }
 
   for (const col of formCols.value) {
-    if (READONLY_COLS.has(col)) continue
+    if (isFieldDisabled(col)) continue
     if (BLOB_COLS.has(col)) continue
     if (col === 'CREATETIME' || col === 'MODIFYDATE') continue
     fd.append(`col_${col}`, formData.value[col] ?? '')
@@ -181,7 +219,7 @@ async function onSave() {
         :required="REQUIRED_COLS.has(col)"
       >
         <!-- Dropdown (COL_OPTIONS) -->
-        <el-select v-if="COL_OPTIONS[col]" v-model="formData[col]" :disabled="READONLY_COLS.has(col)" style="width:100%">
+        <el-select v-if="COL_OPTIONS[col]" v-model="formData[col]" :disabled="isFieldDisabled(col)" style="width:100%">
           <el-option v-for="opt in COL_OPTIONS[col]" :key="String(opt)" :label="opt || '(空)'" :value="opt" />
         </el-select>
 
@@ -190,7 +228,7 @@ async function onSave() {
           v-else-if="COL_AUTOCOMPLETE.has(col)"
           v-model="formData[col]"
           :fetch-suggestions="(q, cb) => queryAutocomplete(col, q, cb)"
-          :disabled="READONLY_COLS.has(col)"
+          :disabled="isFieldDisabled(col)"
           style="width:100%"
           clearable
         />
@@ -199,7 +237,7 @@ async function onSave() {
         <el-input
           v-else
           v-model="formData[col]"
-          :disabled="READONLY_COLS.has(col)"
+          :disabled="isFieldDisabled(col)"
           clearable
         />
       </el-form-item>
@@ -212,6 +250,12 @@ async function onSave() {
             <span class="file-icon-lbl">{{ fileIcon(f.name) }}</span>
             <a :href="getPKFileUrl(f.name)" target="_blank" class="file-name-lbl">{{ f.name }}</a>
             <span class="file-size-lbl">{{ formatBytes(f.size) }}</span>
+            <el-button v-if="isImage(f.name)" size="small" link type="success" @click="previewImage(f.name)">
+              <el-icon><View /></el-icon>
+            </el-button>
+            <el-button size="small" link type="primary" @click="downloadFile(f.name)">
+              <el-icon><Download /></el-icon>
+            </el-button>
             <el-button size="small" link type="danger" @click="removeExistingFile(i)">
               <el-icon><Delete /></el-icon>
             </el-button>
@@ -250,6 +294,14 @@ async function onSave() {
       <el-button type="primary" @click="onSave">保存</el-button>
     </template>
   </el-dialog>
+
+  <Lightbox
+    v-if="lightboxVisible"
+    :visible="lightboxVisible"
+    :images="lightboxImages"
+    :index="lightboxIdx"
+    @close="lightboxVisible = false"
+  />
 </template>
 
 <style scoped>

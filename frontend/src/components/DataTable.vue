@@ -52,9 +52,25 @@ function rowClass({ row, rowIndex }) {
   return rowIndex === selectedIdx.value ? 'row-selected' : ''
 }
 
-// ── Sort ───────────────────────────────────────────────────────────────────
-function onSortChange({ column, prop, order }) {
-  emit('sort-change', { column, prop, order })
+// ── Auto column width ─────────────────────────────────────────────────────
+const AUTO_WIDTH_COLS = new Set(['ADDA', 'BATCH', 'CONTACT', 'LOCALCONTACT', 'FAMILY', 'MOD', 'MODESIGN', 'PONUMBER'])
+const CHAR_PX = 9   // approximate px per character at 15px font
+const COL_PAD = 24  // horizontal cell padding
+
+function colWidth(col) {
+  if (!AUTO_WIDTH_COLS.has(col)) return undefined
+  const headerLen = (colLabel(col) || col).length
+  const maxDataLen = (props.rows || []).reduce((max, row) => {
+    const v = row[col]
+    return v != null ? Math.max(max, String(v).length) : max
+  }, 0)
+  return Math.max(headerLen, maxDataLen) * CHAR_PX + COL_PAD
+}
+
+// ── Sort (double-click header to toggle asc/desc) ─────────────────────────
+function onHeaderDblClick(col) {
+  const newDir = (props.sortCol === col && props.sortDir === 'asc') ? 'desc' : 'asc'
+  emit('sort-change', { column: null, prop: col, order: newDir === 'asc' ? 'ascending' : 'descending' })
 }
 
 // ── ADDA column filter ─────────────────────────────────────────────────────
@@ -150,7 +166,6 @@ function onCurrentChange(page) { emit('page-change', page) }
       border
       height="100%"
       style="width:100%"
-      @sort-change="onSortChange"
       @row-click="onRowClick"
       @row-dblclick="onRowDblClick"
     >
@@ -163,12 +178,12 @@ function onCurrentChange(page) { emit('page-change', page) }
         :key="col"
         :prop="col"
         :label="colLabel(col) || col"
-        :sortable="'custom'"
-        :min-width="100"
+        :width="colWidth(col)"
+        :min-width="colWidth(col) ? undefined : 100"
         :show-overflow-tooltip="false"
       >
         <template #header>
-          <div class="col-header">
+          <div class="col-header" @dblclick.stop="onHeaderDblClick(col)">
             <span class="col-label-text">{{ colLabel(col) || col }}</span>
             <!-- ADDA filter button -->
             <el-popover
@@ -300,7 +315,9 @@ function onCurrentChange(page) { emit('page-change', page) }
 }
 .pg-info { font-size: 12px; color: #666; }
 
-:deep(.el-table th.el-table__cell) { background-color: #eaf5ec; }
+:deep(.el-table th.el-table__cell) { background-color: #eaf5ec; font-weight: bold; }
+:deep(.el-table .caret-wrapper) { display: none; }
+:deep(.el-table td.el-table__cell) { padding: 4px 0; font-size: 15px; }
 :deep(.el-table__row:nth-child(even) td.el-table__cell) { background-color: #eaf5ec; }
 :deep(.row-selected td.el-table__cell) { background-color: #dceefa !important; }
 :deep(.el-table .el-table__row:hover > td) { background: #f0f9ff; }

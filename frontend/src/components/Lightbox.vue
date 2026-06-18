@@ -56,7 +56,7 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
   display: flex; flex-direction: column; align-items: center;
   max-width: 90vw; max-height: 90vh;
 }
-.lb-img { max-width: 80vw; max-height: 80vh; object-fit: contain; display: block; border-radius: 4px; }
+.lb-img { max-width: 80vw; max-height: 80vh; width: auto; height: auto; object-fit: contain; display: block; border-radius: 4px; }
 .lb-close {
   position: absolute; top: -36px; right: 0;
   background: none; border: none; color: #fff; font-size: 22px; cursor: pointer;
