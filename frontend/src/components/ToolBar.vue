@@ -4,7 +4,6 @@ import { Search, Refresh, Plus, CopyDocument, Edit, Delete, Download, Setting } 
 
 const props = defineProps({
   dbConnected: Boolean,
-  search: String,
   rowsPerPage: Number
 })
 
@@ -13,10 +12,15 @@ const emit = defineEmits([
   'delete-row', 'export-csv', 'open-settings', 'size-change'
 ])
 
+const localSearch = ref('')
 let searchTimer = null
 function onSearchInput(val) {
   clearTimeout(searchTimer)
   searchTimer = setTimeout(() => emit('search-change', val), 400)
+}
+function onSearchClear() {
+  localSearch.value = ''
+  emit('search-change', '')
 }
 </script>
 
@@ -25,13 +29,13 @@ function onSearchInput(val) {
     <!-- Left: search -->
     <div class="toolbar-left">
       <el-input
-        :model-value="search"
+        v-model="localSearch"
         placeholder="搜索..."
         clearable
         size="small"
         style="width:220px"
         @input="onSearchInput"
-        @clear="emit('search-change', '')"
+        @clear="onSearchClear"
       >
         <template #prefix><el-icon><Search /></el-icon></template>
       </el-input>

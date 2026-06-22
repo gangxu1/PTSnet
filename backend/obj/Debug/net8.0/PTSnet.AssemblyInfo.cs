@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("PTSnet")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+3a6df288f66e2abd66dfce6f1fe4e5193ec8058c")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+c5a3a419f537e8f74ed5d22ec5460dc94aca79aa")]
 [assembly: System.Reflection.AssemblyProductAttribute("PTSnet")]
 [assembly: System.Reflection.AssemblyTitleAttribute("PTSnet")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
