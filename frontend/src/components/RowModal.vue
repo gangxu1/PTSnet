@@ -19,6 +19,7 @@ const props = defineProps({
   tablePKs: Array
 })
 const emit = defineEmits(['close', 'save'])
+defineExpose({ onSaveResult })
 
 // ── Titles and colors ─────────────────────────────────────────────────────
 const modalTitle = computed(() => ({
@@ -154,6 +155,44 @@ function isFieldDisabled(col) {
   return true
 }
 
+// ── File size limits ──────────────────────────────────────────────────────
+const MAX_SINGLE = 5 * 1024 * 1024    // 5 MB
+const MAX_TOTAL  = 28 * 1024 * 1024   // 28 MB (留余量给 multipart 开销)
+
+const saving = ref(false)
+const lastFormData = ref(null)  // 保留用于 retry
+
+function buildFormData() {
+  const fd = new FormData()
+  fd.append('table', props.table)
+  if (props.mode === 'edit') {
+    const pk = props.tablePKs?.[0]
+    fd.append('pkCol', pk)
+    fd.append('pkVal', props.rowData?.[pk] ?? '')
+    fd.append('col_MODIFYDATE', today())
+  } else {
+    fd.append('col_CREATETIME', today())
+  }
+  for (const col of formCols.value) {
+    if (isFieldDisabled(col)) continue
+    if (BLOB_COLS.has(col)) continue
+    if (col === 'CREATETIME' || col === 'MODIFYDATE') continue
+    fd.append(`col_${col}`, formData.value[col] ?? '')
+  }
+  for (const file of newFiles.value) fd.append('files', file)
+  for (const name of deletedFiles.value) fd.append('deleteFile', name)
+  return fd
+}
+
+async function submitFormData(fd) {
+  saving.value = true
+  try {
+    emit('save', fd)
+  } finally {
+    // saving 由 App.vue 回调后重置，见 onSaveResult
+  }
+}
+
 // ── Validation & Save ─────────────────────────────────────────────────────
 async function onSave() {
   // Validate required
@@ -164,36 +203,33 @@ async function onSave() {
     }
   }
 
-  const fd = new FormData()
-  fd.append('table', props.table)
-
-  if (props.mode === 'edit') {
-    const pk = props.tablePKs?.[0]
-    if (!pk) { ElMessage.error('无主键'); return }
-    fd.append('pkCol', pk)
-    fd.append('pkVal', props.rowData?.[pk] ?? '')
-    // Auto-fill MODIFYDATE
-    fd.append('col_MODIFYDATE', today())
-  } else {
-    // New / Copy — auto-fill CREATETIME
-    fd.append('col_CREATETIME', today())
+  // Validate file sizes
+  const oversized = newFiles.value.filter(f => f.size > MAX_SINGLE)
+  if (oversized.length) {
+    ElMessage.error(`以下文件超过 5MB 限制：${oversized.map(f => f.name).join('、')}`)
+    return
+  }
+  const totalSize = newFiles.value.reduce((s, f) => s + f.size, 0)
+  if (totalSize > MAX_TOTAL) {
+    ElMessage.error(`上传文件总大小 ${(totalSize / 1024 / 1024).toFixed(1)}MB 超过 28MB 限制`)
+    return
   }
 
-  for (const col of formCols.value) {
-    if (isFieldDisabled(col)) continue
-    if (BLOB_COLS.has(col)) continue
-    if (col === 'CREATETIME' || col === 'MODIFYDATE') continue
-    fd.append(`col_${col}`, formData.value[col] ?? '')
-  }
-
-  for (const file of newFiles.value) {
-    fd.append('files', file)
-  }
-  for (const name of deletedFiles.value) {
-    fd.append('deleteFile', name)
-  }
-
+  const fd = buildFormData()
+  lastFormData.value = fd
+  saving.value = true
   emit('save', fd)
+}
+
+async function onRetry() {
+  if (!lastFormData.value) return
+  saving.value = true
+  emit('save', lastFormData.value)
+}
+
+function onSaveResult(success) {
+  saving.value = false
+  if (success) lastFormData.value = null
 }
 </script>
 
@@ -203,6 +239,8 @@ async function onSave() {
     :title="modalTitle"
     width="540px"
     :close-on-click-modal="false"
+    :close-on-press-escape="!saving"
+    :show-close="!saving"
     @close="emit('close')"
   >
     <template #header>
@@ -290,8 +328,14 @@ async function onSave() {
     </el-form>
 
     <template #footer>
-      <el-button @click="emit('close')">取消</el-button>
-      <el-button type="primary" @click="onSave">保存</el-button>
+      <div style="display:flex;align-items:center;justify-content:flex-end;gap:8px">
+        <span v-if="saving" style="font-size:12px;color:#888">
+          ⏳ 正在保存，请稍候...
+        </span>
+        <el-button v-if="!saving" @click="emit('close')">取消</el-button>
+        <el-button v-if="saving" @click="onRetry" type="warning">重试</el-button>
+        <el-button type="primary" :loading="saving" :disabled="saving" @click="onSave">保存</el-button>
+      </div>
     </template>
   </el-dialog>
 

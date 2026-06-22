@@ -61,6 +61,7 @@ async function fetchDistinct(col) {
 const rowModalVisible = ref(false)
 const rowModalMode = ref('new')   // 'new' | 'edit' | 'copy'
 const rowModalData = ref({})
+const rowModalRef = ref(null)
 
 const settingsVisible = ref(false)
 const deleteConfirmVisible = ref(false)
@@ -190,15 +191,25 @@ function openDeleteConfirm() {
 }
 
 async function onRowSave(formData) {
-  rowModalVisible.value = false
-  if (rowModalMode.value === 'edit') {
-    const res = await updateRow(formData)
-    if (res.ok) { ElMessage.success('保存成功'); fetchPage() }
-    else ElMessage.error(res.error || '保存失败')
-  } else {
-    const res = await insertRow(formData)
-    if (res.ok) { ElMessage.success('新增成功'); fetchPage() }
-    else ElMessage.error(res.error || '新增失败')
+  try {
+    let res
+    if (rowModalMode.value === 'edit') {
+      res = await updateRow(formData)
+    } else {
+      res = await insertRow(formData)
+    }
+    if (res.ok) {
+      rowModalRef.value?.onSaveResult(true)
+      rowModalVisible.value = false
+      ElMessage.success(rowModalMode.value === 'edit' ? '保存成功' : '新增成功')
+      fetchPage()
+    } else {
+      rowModalRef.value?.onSaveResult(false)
+      ElMessage.error(res.error || '保存失败')
+    }
+  } catch (e) {
+    rowModalRef.value?.onSaveResult(false)
+    ElMessage.error('网络错误，请重试')
   }
 }
 
@@ -302,6 +313,7 @@ onMounted(async () => {
     />
 
     <RowModal
+      ref="rowModalRef"
       v-if="rowModalVisible"
       :visible="rowModalVisible"
       :mode="rowModalMode"
