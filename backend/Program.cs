@@ -23,6 +23,8 @@ builder.Services.AddCors(options =>
     });
 });
 
+builder.Services.AddSpaStaticFiles(cfg => cfg.RootPath = "wwwroot");
+
 var app = builder.Build();
 app.UseCors();
 
@@ -677,5 +679,9 @@ app.MapGet("/api/db/filedownload", async (HttpContext ctx, string table, string 
         await ctx.Response.WriteAsJsonAsync(new { ok = false, error = ex.Message });
     }
 });
+
+// 生产环境：服务前端静态文件
+app.UseDefaultFiles();
+app.UseStaticFiles();
 
 app.Run();
