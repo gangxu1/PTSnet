@@ -23,8 +23,6 @@ builder.Services.AddCors(options =>
     });
 });
 
-builder.Services.AddSpaStaticFiles(cfg => cfg.RootPath = "wwwroot");
-
 var app = builder.Build();
 app.UseCors();
 
