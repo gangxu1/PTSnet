@@ -20,7 +20,8 @@ const props = defineProps({
   colFilters: Object,
   colVisibility: Object,
   tablePKs: Array,
-  currentTable: String
+  currentTable: String,
+  dbConnected: Boolean
 })
 
 const emit = defineEmits([
@@ -268,6 +269,9 @@ function onCurrentChange(page) { emit('page-change', page) }
 
     <div class="pagination-bar">
       <span class="pg-info">共 {{ totalRows }} 条，第 {{ currentPage }}/{{ totalPages }} 页</span>
+      <span class="db-status" :class="{ connected: dbConnected }">
+        <span class="dot"></span>{{ dbConnected ? 'DB已连接' : 'DB未连接' }}
+      </span>
       <el-pagination
         :current-page="currentPage"
         :page-size="rowsPerPage"
@@ -318,6 +322,16 @@ function onCurrentChange(page) { emit('page-change', page) }
   flex-shrink: 0;
 }
 .pg-info { font-size: 12px; color: #666; }
+.db-status {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: #999;
+}
+.db-status.connected { color: #27ae60; }
+.dot { width: 8px; height: 8px; border-radius: 50%; background: #999; flex-shrink: 0; }
+.db-status.connected .dot { background: #27ae60; }
 
 :deep(.el-table th.el-table__cell) { background-color: #eaf5ec; font-weight: bold; }
 :deep(.el-table .caret-wrapper) { display: none; }

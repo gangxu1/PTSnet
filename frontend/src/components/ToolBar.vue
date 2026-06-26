@@ -2,14 +2,11 @@
 import { ref } from 'vue'
 import { Search, Refresh, Plus, CopyDocument, Edit, Delete, Download, Setting } from '@element-plus/icons-vue'
 
-const props = defineProps({
-  dbConnected: Boolean,
-  rowsPerPage: Number
-})
+const props = defineProps({})
 
 const emit = defineEmits([
   'search-change', 'refresh', 'new-row', 'copy-row', 'edit-row',
-  'delete-row', 'export-csv', 'open-settings', 'size-change'
+  'delete-row', 'export-csv', 'open-settings'
 ])
 
 const localSearch = ref('')
@@ -43,21 +40,6 @@ function onSearchClear() {
 
     <!-- Right: controls -->
     <div class="toolbar-right">
-      <el-select
-        :model-value="rowsPerPage"
-        size="small"
-        style="width:80px"
-        @change="v => emit('size-change', v)"
-      >
-        <el-option :value="20" label="20/页" />
-        <el-option :value="50" label="50/页" />
-        <el-option :value="100" label="100/页" />
-      </el-select>
-
-      <span class="db-status" :class="{ connected: dbConnected }">
-        <span class="dot"></span>{{ dbConnected ? 'DB已连接' : 'DB未连接' }}
-      </span>
-
       <el-button size="small" @click="emit('refresh')">
         <el-icon><Refresh /></el-icon> 刷新
       </el-button>
@@ -75,6 +57,9 @@ function onSearchClear() {
       </el-button>
       <el-button size="small" @click="emit('export-csv')">
         <el-icon><Download /></el-icon> 导出 CSV
+      </el-button>
+      <el-button size="small" style="background:#27ae60;border-color:#27ae60;color:#fff" tag="a" href="/0_Pre-Classfication.xlsx" download="0_Pre-Classfication.xlsx">
+        <el-icon><Download /></el-icon> 模板
       </el-button>
       <el-button size="small" style="background:#555;border-color:#555;color:#fff" @click="emit('open-settings')">
         <el-icon><Setting /></el-icon> 设置
@@ -95,20 +80,4 @@ function onSearchClear() {
 }
 .toolbar-left { display: flex; align-items: center; }
 .toolbar-right { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
-
-.db-status {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 12px;
-  color: #ccc;
-  padding: 0 4px;
-}
-.db-status.connected { color: #2ecc71; }
-.dot {
-  width: 8px; height: 8px; border-radius: 50%;
-  background: #999;
-  flex-shrink: 0;
-}
-.db-status.connected .dot { background: #2ecc71; }
 </style>

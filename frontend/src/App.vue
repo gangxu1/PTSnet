@@ -275,8 +275,6 @@ onMounted(async () => {
 <template>
   <div class="app-layout">
     <ToolBar
-      :db-connected="dbConnected"
-      :rows-per-page="rowsPerPage"
       @search-change="onSearchChange"
       @refresh="refreshData"
       @new-row="openNewModal"
@@ -285,7 +283,6 @@ onMounted(async () => {
       @delete-row="openDeleteConfirm"
       @export-csv="exportCSV"
       @open-settings="settingsVisible = true"
-      @size-change="onSizeChange"
     />
 
     <DataTable
@@ -296,6 +293,7 @@ onMounted(async () => {
       :rows-per-page="rowsPerPage"
       :total-rows="totalRows"
       :total-pages="totalPages"
+      :db-connected="dbConnected"
       :sort-col="sortCol"
       :sort-dir="sortDir"
       :col-filters="colFilters"
